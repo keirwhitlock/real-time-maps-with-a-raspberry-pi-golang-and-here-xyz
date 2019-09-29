@@ -11,7 +11,7 @@ WorkingDirectory=/usr/local/
 User=root
 Group=staff
 
-ExecStart=/usr/local/bin/gps-project
+ExecStart=/usr/local/bin/gps-project -spaceid $HERE_XYZ_SPACE_ID -token $HERE_XYZ_TOKEN -url $GPS_PROJECT_DOWNLOAD_URL
 
 Restart=always
 
