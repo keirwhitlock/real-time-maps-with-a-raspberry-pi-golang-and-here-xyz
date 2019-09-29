@@ -5,10 +5,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 
 	"github.com/adrianmo/go-nmea"
 	"github.com/jacobsa/go-serial/serial"
@@ -46,16 +48,52 @@ func (here *HereDev) PushToXYZ(data []byte) ([]byte, error) {
 
 }
 
+func DownloadFile(url, filepath string) error {
+
+	// Create file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+
+	// Close file at end of func call
+	defer out.Close()
+
+	// Download data from url
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Write data io to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 
 	token := flag.String("token", "", "Here XYZ Token")
 	spaceid := flag.String("spaceid", "", "Here XYZ Space ID")
+	binaryUrl := flag.String("url", "", "URL for compiled binary")
+	filepath := flag.String("filepath", "/usr/local/bin/gps-project", "Filepath to save compiled binary")
 	debugEnabled := flag.Bool("debug", false, "Enable debug")
 
 	flag.Parse()
 
 	if *debugEnabled {
 		fmt.Printf(".: DEBUG ENABLED :.\n\n")
+	}
+
+	if *binaryUrl != "" {
+		err := DownloadFile(*binaryUrl, *filepath)
+		if err != nil {
+			log.Fatalf("file download: %v", err)
+		}
 	}
 
 	options := serial.OpenOptions{
